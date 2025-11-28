@@ -5,15 +5,18 @@ import (
 	"fmt"
 
 	"github.com/kanaru-ssk/go-rpc-server/domain/task"
+	"github.com/kanaru-ssk/go-rpc-server/lib/tx"
 )
 
 type TaskUseCase struct {
+	txManager      tx.Manager
 	taskFactory    *task.Factory
 	taskRepository task.Repository
 }
 
-func NewTaskUseCase(taskFactory *task.Factory, taskRepository task.Repository) *TaskUseCase {
+func NewTaskUseCase(txManager tx.Manager, taskFactory *task.Factory, taskRepository task.Repository) *TaskUseCase {
 	return &TaskUseCase{
+		txManager:      txManager,
 		taskFactory:    taskFactory,
 		taskRepository: taskRepository,
 	}
@@ -64,14 +67,21 @@ func (u *TaskUseCase) Update(ctx context.Context, id, title string, status strin
 	if err != nil {
 		return nil, fmt.Errorf("usecase.TaskUseCase.Update: %w", err)
 	}
-	task, err := u.taskRepository.Get(ctx, pi)
-	if err != nil {
+	var task *task.Task
+	if err := u.txManager.WithinTx(ctx, func(ctx context.Context) error {
+		task, err = u.taskRepository.Get(ctx, pi)
+		if err != nil {
+			return err
+		}
+		task.Update(pt, ps)
+		if err := u.taskRepository.Update(ctx, task); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
 		return nil, fmt.Errorf("usecase.TaskUseCase.Update: %w", err)
 	}
-	task.Update(pt, ps)
-	if err := u.taskRepository.Update(ctx, task); err != nil {
-		return nil, fmt.Errorf("usecase.TaskUseCase.Update: %w", err)
-	}
+
 	return task, nil
 }
 

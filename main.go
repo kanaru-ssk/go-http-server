@@ -9,11 +9,13 @@ import (
 	"syscall"
 
 	"github.com/kanaru-ssk/go-rpc-server/domain/task"
-	infratask "github.com/kanaru-ssk/go-rpc-server/infrastructure/task"
+	"github.com/kanaru-ssk/go-rpc-server/infrastructure/memory"
+	infratask "github.com/kanaru-ssk/go-rpc-server/infrastructure/memory/task"
 	"github.com/kanaru-ssk/go-rpc-server/interface/httphandler"
 	"github.com/kanaru-ssk/go-rpc-server/interface/response/errorresponse"
 	"github.com/kanaru-ssk/go-rpc-server/interface/response/taskresponse"
 	"github.com/kanaru-ssk/go-rpc-server/lib/id"
+	"github.com/kanaru-ssk/go-rpc-server/lib/tx"
 	"github.com/kanaru-ssk/go-rpc-server/usecase"
 )
 
@@ -25,8 +27,10 @@ func main() {
 	defer stop()
 
 	idGenerator := &id.SecureGenerator{}
+	mu := &sync.RWMutex{}
+	txManager := memory.NewTxManager(mu)
 	tasks := make(map[string]*task.Task)
-	app := di(idGenerator, tasks)
+	app := di(idGenerator, txManager, tasks)
 
 	addr := ":8000"
 	go func() {
@@ -43,14 +47,14 @@ type Application struct {
 	Handler http.Handler
 }
 
-func di(idGenerator id.Generator, tasks map[string]*task.Task) Application {
+func di(idGenerator id.Generator, txManager tx.Manager, tasks map[string]*task.Task) Application {
 	mu := &sync.RWMutex{}
 
 	taskFactory := task.NewFactory(idGenerator)
 	taskRepository := infratask.NewRepository(mu, tasks)
 
 	// usecase
-	userUseCase := usecase.NewTaskUseCase(taskFactory, taskRepository)
+	userUseCase := usecase.NewTaskUseCase(txManager, taskFactory, taskRepository)
 
 	// mapper
 	userMapper := taskresponse.NewMapper()
