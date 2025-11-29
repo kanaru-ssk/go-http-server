@@ -72,6 +72,7 @@ func di(idGenerator id.Generator, txManager tx.Manager, tasks map[string]*task.T
 	mux.HandleFunc("/core/v1/task/create", taskHandler.HandleCreateV1)
 	mux.HandleFunc("/core/v1/task/update", taskHandler.HandleUpdateV1)
 	mux.HandleFunc("/core/v1/task/delete", taskHandler.HandleDeleteV1)
+	mux.HandleFunc("/core/v1/task/done", taskHandler.HandleDoneV1)
 
 	return Application{Handler: mux}
 }
