@@ -54,14 +54,14 @@ func di(idGenerator id.Generator, txManager tx.Manager, tasks map[string]*task.T
 	taskRepository := infratask.NewRepository(mu, tasks)
 
 	// usecase
-	userUseCase := usecase.NewTaskUseCase(txManager, taskFactory, taskRepository)
+	userUsecase := usecase.NewTaskUsecase(txManager, taskFactory, taskRepository)
 
 	// mapper
 	userMapper := taskresponse.NewMapper()
 	errorMapper := errorresponse.NewMapper()
 
 	// handler
-	taskHandler := httphandler.NewTaskHandler(userUseCase, userMapper, errorMapper)
+	taskHandler := httphandler.NewTaskHandler(userUsecase, userMapper, errorMapper)
 
 	mux := http.NewServeMux()
 

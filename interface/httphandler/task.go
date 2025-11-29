@@ -14,18 +14,18 @@ import (
 )
 
 type TaskHandler struct {
-	taskUseCase *usecase.TaskUseCase
+	taskUsecase *usecase.TaskUsecase
 	taskMapper  *taskresponse.Mapper
 	errorMapper *errorresponse.Mapper
 }
 
 func NewTaskHandler(
-	taskUseCase *usecase.TaskUseCase,
+	taskUsecase *usecase.TaskUsecase,
 	taskMapper *taskresponse.Mapper,
 	errorMapper *errorresponse.Mapper,
 ) *TaskHandler {
 	return &TaskHandler{
-		taskUseCase: taskUseCase,
+		taskUsecase: taskUsecase,
 		taskMapper:  taskMapper,
 		errorMapper: errorMapper,
 	}
@@ -52,7 +52,7 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := h.taskUseCase.Get(ctx, request.ID)
+	t, err := h.taskUsecase.Get(ctx, request.ID)
 	switch {
 
 	// 200
@@ -86,7 +86,7 @@ func (h *TaskHandler) HandleListV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := h.taskUseCase.List(ctx)
+	t, err := h.taskUsecase.List(ctx)
 	switch {
 
 	// 200
@@ -120,7 +120,7 @@ func (h *TaskHandler) HandleCreateV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := h.taskUseCase.Create(ctx, request.Title)
+	t, err := h.taskUsecase.Create(ctx, request.Title)
 	switch {
 
 	// 200
@@ -162,7 +162,7 @@ func (h *TaskHandler) HandleUpdateV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := h.taskUseCase.Update(ctx, request.ID, request.Title, request.Status)
+	t, err := h.taskUsecase.Update(ctx, request.ID, request.Title, request.Status)
 	switch {
 
 	// 200
@@ -204,7 +204,7 @@ func (h *TaskHandler) HandleDeleteV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.taskUseCase.Delete(ctx, request.ID)
+	err := h.taskUsecase.Delete(ctx, request.ID)
 	switch {
 
 	// 204
