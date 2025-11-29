@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/kanaru-ssk/go-rpc-server/domain/task"
@@ -28,7 +29,7 @@ func (r *repository) Get(ctx context.Context, id string) (*task.Task, error) {
 
 	t, ok := r.tasks[id]
 	if !ok || t == nil {
-		return nil, task.ErrNotFound
+		return nil, fmt.Errorf("task.repository.Get: %w", task.ErrNotFound)
 	}
 
 	return t, nil
@@ -67,7 +68,7 @@ func (r *repository) Update(ctx context.Context, t *task.Task) error {
 
 	cur, ok := r.tasks[t.ID]
 	if !ok || cur == nil {
-		return task.ErrNotFound
+		return fmt.Errorf("task.repository.Update: %w", task.ErrNotFound)
 	}
 	r.tasks[t.ID] = t
 
