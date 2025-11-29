@@ -32,36 +32,44 @@ func NewTaskHandler(
 }
 
 func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		ID string `json:"id"`
+	}
+
 	ctx := r.Context()
 
+	// 405
 	if r.Method != http.MethodPost {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleGetV1", "err", errorresponse.ErrMethodNotAllowed)
 		httpresponse.RenderJson(ctx, w, http.StatusMethodNotAllowed, h.errorMapper.MapErrorResponse(errorresponse.ErrMethodNotAllowed))
 		return
 	}
 
-	var req struct {
-		ID string `json:"id"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	// 400
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleGetV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 		return
 	}
 
-	t, err := h.taskUseCase.Get(ctx, req.ID)
+	t, err := h.taskUseCase.Get(ctx, request.ID)
 	switch {
+
+	// 200
 	case err == nil:
 		httpresponse.RenderJson(ctx, w, http.StatusOK, h.taskMapper.MapGetResponse(t))
 
+	// 400
 	case errors.Is(err, task.ErrInvalidID):
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleGetV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 
+	// 404
 	case errors.Is(err, task.ErrNotFound):
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleGetV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusNotFound, h.errorMapper.MapErrorResponse(errorresponse.ErrNotFound))
 
+	// 500
 	default:
 		slog.ErrorContext(ctx, "httphandler.TaskHandler.HandleGetV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusInternalServerError, h.errorMapper.MapErrorResponse(errorresponse.ErrInternalServerError))
@@ -71,6 +79,7 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 func (h *TaskHandler) HandleListV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	// 405
 	if r.Method != http.MethodPost {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleListV1", "err", errorresponse.ErrMethodNotAllowed)
 		httpresponse.RenderJson(ctx, w, http.StatusMethodNotAllowed, h.errorMapper.MapErrorResponse(errorresponse.ErrMethodNotAllowed))
@@ -79,9 +88,12 @@ func (h *TaskHandler) HandleListV1(w http.ResponseWriter, r *http.Request) {
 
 	t, err := h.taskUseCase.List(ctx)
 	switch {
+
+	// 200
 	case err == nil:
 		httpresponse.RenderJson(ctx, w, http.StatusOK, h.taskMapper.MapListResponse(t))
 
+	// 500
 	default:
 		slog.ErrorContext(ctx, "httphandler.TaskHandler.HandleListV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusInternalServerError, h.errorMapper.MapErrorResponse(errorresponse.ErrInternalServerError))
@@ -89,31 +101,38 @@ func (h *TaskHandler) HandleListV1(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) HandleCreateV1(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		Title string `json:"title"`
+	}
+
 	ctx := r.Context()
 
+	// 405
 	if r.Method != http.MethodPost {
 		httpresponse.RenderJson(ctx, w, http.StatusMethodNotAllowed, h.errorMapper.MapErrorResponse(errorresponse.ErrMethodNotAllowed))
 		return
 	}
 
-	var req struct {
-		Title string `json:"title"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	// 400
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleCreateV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 		return
 	}
 
-	t, err := h.taskUseCase.Create(ctx, req.Title)
+	t, err := h.taskUseCase.Create(ctx, request.Title)
 	switch {
+
+	// 200
 	case err == nil:
 		httpresponse.RenderJson(ctx, w, http.StatusOK, h.taskMapper.MapCreateResponse(t))
 
+	// 400
 	case errors.Is(err, task.ErrInvalidTitle):
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleCreateV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 
+	// 500
 	default:
 		slog.ErrorContext(ctx, "httphandler.TaskHandler.HandleCreateV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusInternalServerError, h.errorMapper.MapErrorResponse(errorresponse.ErrInternalServerError))
@@ -121,36 +140,43 @@ func (h *TaskHandler) HandleCreateV1(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) HandleUpdateV1(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		ID     string `json:"id"`
+		Title  string `json:"title"`
+		Status string `json:"status"`
+	}
+
 	ctx := r.Context()
 
+	// 405
 	if r.Method != http.MethodPost {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleUpdateV1", "err", errorresponse.ErrMethodNotAllowed)
 		httpresponse.RenderJson(ctx, w, http.StatusMethodNotAllowed, h.errorMapper.MapErrorResponse(errorresponse.ErrMethodNotAllowed))
 		return
 	}
 
-	var req struct {
-		ID     string `json:"id"`
-		Title  string `json:"title"`
-		Status string `json:"status"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	// 400
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleUpdateV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 		return
 	}
 
-	t, err := h.taskUseCase.Update(ctx, req.ID, req.Title, req.Status)
+	t, err := h.taskUseCase.Update(ctx, request.ID, request.Title, request.Status)
 	switch {
+
+	// 200
 	case err == nil:
 		httpresponse.RenderJson(ctx, w, http.StatusOK, h.taskMapper.MapUpdateResponse(t))
 
+	// 400
 	case errors.Is(err, task.ErrInvalidID),
 		errors.Is(err, task.ErrInvalidTitle),
 		errors.Is(err, task.ErrInvalidStatus):
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleUpdateV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 
+	// 500
 	default:
 		slog.ErrorContext(ctx, "httphandler.TaskHandler.HandleUpdateV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusInternalServerError, h.errorMapper.MapErrorResponse(errorresponse.ErrInternalServerError))
@@ -158,32 +184,39 @@ func (h *TaskHandler) HandleUpdateV1(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) HandleDeleteV1(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		ID string `json:"id"`
+	}
+
 	ctx := r.Context()
 
+	// 405
 	if r.Method != http.MethodPost {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleDeleteV1", "err", errorresponse.ErrMethodNotAllowed)
 		httpresponse.RenderJson(ctx, w, http.StatusMethodNotAllowed, h.errorMapper.MapErrorResponse(errorresponse.ErrMethodNotAllowed))
 		return
 	}
 
-	var req struct {
-		ID string `json:"id"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	// 400
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleDeleteV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 		return
 	}
 
-	err := h.taskUseCase.Delete(ctx, req.ID)
+	err := h.taskUseCase.Delete(ctx, request.ID)
 	switch {
+
+	// 204
 	case err == nil:
 		w.WriteHeader(http.StatusNoContent)
 
+	// 400
 	case errors.Is(err, task.ErrInvalidID):
 		slog.WarnContext(ctx, "httphandler.TaskHandler.HandleUpdateV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusBadRequest, h.errorMapper.MapErrorResponse(errorresponse.ErrInvalidRequestBody))
 
+	// 500
 	default:
 		slog.ErrorContext(ctx, "httphandler.TaskHandler.HandleDeleteV1", "err", err)
 		httpresponse.RenderJson(ctx, w, http.StatusInternalServerError, h.errorMapper.MapErrorResponse(errorresponse.ErrInternalServerError))
