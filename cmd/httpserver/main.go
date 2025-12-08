@@ -24,7 +24,7 @@ func main() {
 
 	idGenerator := &id.SecureGenerator{}
 	mu := &sync.RWMutex{}
-	txManager := memory.NewTxManager(mu)
+	txManager := memory.NewTxManager()
 	tasks := make(map[string]*task.Task)
 	app := dependencyInjection(mu, idGenerator, txManager, tasks)
 

@@ -9,11 +9,11 @@ import (
 
 // MemoryTxManager はメモリ内で簡易的にトランザクション境界を再現する。
 type MemoryTxManager struct {
-	mu *sync.RWMutex
+	mu sync.Locker
 }
 
-func NewTxManager(mu *sync.RWMutex) tx.Manager {
-	return &MemoryTxManager{mu: mu}
+func NewTxManager() tx.Manager {
+	return &MemoryTxManager{mu: &sync.Mutex{}}
 }
 
 // WithinTx は排他制御を行いながら処理を実行する。

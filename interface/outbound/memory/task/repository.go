@@ -51,8 +51,8 @@ func (r *repository) List(ctx context.Context) ([]*task.Task, error) {
 }
 
 func (r *repository) Create(ctx context.Context, t *task.Task) error {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	if r.tasks == nil {
 		r.tasks = make(map[string]*task.Task)
@@ -63,8 +63,8 @@ func (r *repository) Create(ctx context.Context, t *task.Task) error {
 }
 
 func (r *repository) Update(ctx context.Context, t *task.Task) error {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	cur, ok := r.tasks[t.ID]
 	if !ok || cur == nil {
@@ -76,8 +76,8 @@ func (r *repository) Update(ctx context.Context, t *task.Task) error {
 }
 
 func (r *repository) Delete(ctx context.Context, id string) error {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	if _, ok := r.tasks[id]; !ok {
 		return task.ErrNotFound
