@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/kanaru-ssk/go-rpc-server/entity/task"
 	"github.com/kanaru-ssk/go-rpc-server/interface/inbound/http/response"
@@ -241,6 +242,7 @@ func (h *TaskHandler) HandleDoneV1(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		ID string `json:"id"`
 	}
+	var successResponse response.Task
 	var errorResponse response.Error
 
 	ctx := r.Context()
@@ -253,32 +255,21 @@ func (h *TaskHandler) HandleDoneV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.taskUsecase.Done(ctx, request.ID)
-
+	// 他のチームの作業に影響しないように、開発中はmockデータを返しておく
 	// 204
-	if err == nil {
-		w.WriteHeader(http.StatusNoContent)
-		return
+	successResponse = response.Task{
+		ID:        "id",
+		Title:     "title",
+		Status:    "TODO",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
+	response.RenderJson(ctx, w, http.StatusOK, successResponse)
 
 	// 400
-	if errors.Is(err, task.ErrInvalidID) {
-		slog.WarnContext(ctx, "handler.TaskHandler.HandleDoneV1", "err", err)
-		errorResponse = response.MapError(response.ErrInvalidRequestBody)
-		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
-		return
-	}
 
 	// 404
-	if errors.Is(err, task.ErrNotFound) {
-		slog.WarnContext(ctx, "handler.TaskHandler.HandleDoneV1", "err", err)
-		errorResponse = response.MapError(response.ErrNotFound)
-		response.RenderJson(ctx, w, http.StatusNotFound, errorResponse)
-		return
-	}
 
 	// 500
-	slog.ErrorContext(ctx, "handler.TaskHandler.HandleDoneV1", "err", err)
-	errorResponse = response.MapError(response.ErrInternalServerError)
-	response.RenderJson(ctx, w, http.StatusInternalServerError, errorResponse)
+
 }

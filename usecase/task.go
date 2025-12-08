@@ -95,8 +95,3 @@ func (u *TaskUsecase) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
-
-func (u *TaskUsecase) Done(ctx context.Context, id string) error {
-	// TODO: Doneの処理実装
-	return nil
-}
