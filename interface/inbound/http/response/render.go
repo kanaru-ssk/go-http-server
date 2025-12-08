@@ -1,4 +1,4 @@
-package httpresponse
+package response
 
 import (
 	"context"
@@ -19,6 +19,6 @@ func RenderJson(ctx context.Context, w http.ResponseWriter, statusCode int, body
 	w.Header().Add("Content-Length", strconv.Itoa(len(b)))
 	w.WriteHeader(statusCode)
 	if _, err := w.Write(b); err != nil {
-		slog.ErrorContext(ctx, "httpresponse.RenderJson: http.ResponseWriter.Write:", "err", err)
+		slog.ErrorContext(ctx, "response.RenderJson: http.ResponseWriter.Write:", "err", err)
 	}
 }

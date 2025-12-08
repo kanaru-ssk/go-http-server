@@ -1,4 +1,4 @@
-package errorresponse
+package response
 
 type ErrorCode string
 
@@ -13,3 +13,11 @@ const (
 const (
 	ErrInternalServerError ErrorCode = "INTERNAL_SERVER_ERROR"
 )
+
+type Error struct {
+	ErrorCode ErrorCode `json:"errorCode"`
+}
+
+func MapError(errorCode ErrorCode) Error {
+	return Error{errorCode}
+}
