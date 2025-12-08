@@ -8,7 +8,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/kanaru-ssk/go-rpc-server/domain/task"
+	"github.com/kanaru-ssk/go-rpc-server/entity/task"
 	"github.com/kanaru-ssk/go-rpc-server/interface/inbound/http/handler"
 	"github.com/kanaru-ssk/go-rpc-server/interface/outbound/memory"
 	memorytask "github.com/kanaru-ssk/go-rpc-server/interface/outbound/memory/task"
@@ -26,7 +26,7 @@ func main() {
 	mu := &sync.RWMutex{}
 	txManager := memory.NewTxManager(mu)
 	tasks := make(map[string]*task.Task)
-	app := di(idGenerator, txManager, tasks)
+	app := dependencyInjection(mu, idGenerator, txManager, tasks)
 
 	addr := ":8000"
 	go func() {
@@ -43,19 +43,17 @@ type Application struct {
 	Handler http.Handler
 }
 
-func di(idGenerator id.Generator, txManager tx.Manager, tasks map[string]*task.Task) Application {
-	mu := &sync.RWMutex{}
-
-	// outbound interface
+func dependencyInjection(mu *sync.RWMutex, idGenerator id.Generator, txManager tx.Manager, tasks map[string]*task.Task) Application {
+	// interface/outbound
 	taskRepository := memorytask.NewRepository(mu, tasks)
 
-	// domain
+	// entity
 	taskFactory := task.NewFactory(idGenerator)
 
 	// usecase
 	userUsecase := usecase.NewTaskUsecase(txManager, taskFactory, taskRepository)
 
-	// inbound interface
+	// interface/inbound
 	taskHandler := handler.NewTaskHandler(userUsecase)
 
 	mux := http.NewServeMux()

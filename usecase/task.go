@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kanaru-ssk/go-rpc-server/domain/task"
+	"github.com/kanaru-ssk/go-rpc-server/entity/task"
 	"github.com/kanaru-ssk/go-rpc-server/lib/tx"
 )
 

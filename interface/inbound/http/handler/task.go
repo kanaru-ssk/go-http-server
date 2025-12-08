@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/kanaru-ssk/go-rpc-server/domain/task"
+	"github.com/kanaru-ssk/go-rpc-server/entity/task"
 	"github.com/kanaru-ssk/go-rpc-server/interface/inbound/http/response"
 	"github.com/kanaru-ssk/go-rpc-server/usecase"
 )
@@ -70,7 +70,6 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 	slog.ErrorContext(ctx, "handler.TaskHandler.HandleGetV1", "err", err)
 	errorResponse = response.MapError(response.ErrInternalServerError)
 	response.RenderJson(ctx, w, http.StatusInternalServerError, errorResponse)
-
 }
 
 // POST /core/v1/task/list
