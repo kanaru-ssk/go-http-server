@@ -271,5 +271,4 @@ func (h *TaskHandler) HandleDoneV1(w http.ResponseWriter, r *http.Request) {
 	// 404
 
 	// 500
-
 }
