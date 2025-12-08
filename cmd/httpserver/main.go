@@ -51,10 +51,10 @@ func dependencyInjection(mu *sync.RWMutex, idGenerator id.Generator, txManager t
 	taskFactory := task.NewFactory(idGenerator)
 
 	// usecase
-	userUsecase := usecase.NewTaskUsecase(txManager, taskFactory, taskRepository)
+	taskUsecase := usecase.NewTaskUsecase(txManager, taskFactory, taskRepository)
 
 	// interface/inbound
-	taskHandler := handler.NewTaskHandler(userUsecase)
+	taskHandler := handler.NewTaskHandler(taskUsecase)
 
 	mux := http.NewServeMux()
 
