@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kanaru-ssk/go-rpc-server/domain/task"
+	"github.com/kanaru-ssk/go-rpc-server/entity/task"
 	"github.com/kanaru-ssk/go-rpc-server/lib/tx"
 )
 
@@ -93,10 +93,5 @@ func (u *TaskUsecase) Delete(ctx context.Context, id string) error {
 	if err := u.taskRepository.Delete(ctx, pi); err != nil {
 		return fmt.Errorf("usecase.TaskUsecase.Delete: %w", err)
 	}
-	return nil
-}
-
-func (u *TaskUsecase) Done(ctx context.Context, id string) error {
-	// TODO: Doneの処理実装
 	return nil
 }
