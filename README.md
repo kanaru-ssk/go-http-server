@@ -26,12 +26,12 @@ curl -X POST localhost:8000/core/v1/task/delete -d '{ "id": "id_01" }'
 全て POST で統一し、パスは以下の命名規則に従う。
 
 ```
-POST /serviceName/v1/usecaseName/methodName
+POST /serviceName/v1/useCaseName/methodName
 ```
 
 - 単語は lowerCamel
 - serviceName はマイクロサービス化を想定して設定、モノリス時は`core`というサービス名を使う。
-- usecaseName, methodName は`usecase`ディレクトリ配下の構造体名、メソッド名に合わせる。
+- useCaseName, methodName は`usecase`ディレクトリ配下の構造体名、メソッド名に合わせる。
 - get, list から始まる methodName は安全性・冪等性を担保する。
 
 ### API スキーマ定義
@@ -77,7 +77,7 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := h.taskUsecase.Get(ctx, request.ID)
+	t, err := h.taskUseCase.Get(ctx, request.ID)
 
 	// 200
 	if err == nil {
