@@ -32,7 +32,7 @@ func (r *repository) Get(ctx context.Context, id string) (*task.Task, error) {
 		return nil, fmt.Errorf("task.repository.Get: %w", task.ErrNotFound)
 	}
 
-	return t, nil
+	return cloneTask(t), nil
 }
 
 func (r *repository) List(ctx context.Context) ([]*task.Task, error) {
@@ -44,7 +44,7 @@ func (r *repository) List(ctx context.Context) ([]*task.Task, error) {
 		if t == nil {
 			continue
 		}
-		list = append(list, t)
+		list = append(list, cloneTask(t))
 	}
 
 	return list, nil
@@ -86,4 +86,12 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 	delete(r.tasks, id)
 
 	return nil
+}
+
+func cloneTask(t *task.Task) *task.Task {
+	if t == nil {
+		return nil
+	}
+	copy := *t
+	return &copy
 }
