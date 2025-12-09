@@ -4,22 +4,42 @@
 
 RPC スタイルの HTTP API
 
-POST メソッドのみを使用し、JSON 形式で通信する。
-
 ## 命名規則
 
-全て POST で統一し、パスは以下の命名規則に従う。
+パスは以下の命名規則に従う。
 
 ```
-POST /<serviceName>/<version>/<useCaseName>/<methodName>
+/<serviceName>/<version>/<useCaseName>/<methodName>
 
-例: POST /core/v1/task/get
+例: /core/v1/task/get
 ```
 
 - 単語は `lowerCamelCase` で統一
 - `<serviceName>` はマイクロサービス化を想定して設定、モノリス時は`core`というサービス名を使う。
 - `<useCaseName>`, `<methodName>` は`usecase`ディレクトリ配下の構造体名、メソッド名に合わせる。
-- `get`, `list` から始まる method は安全性・冪等性を担保する。
+
+## HTTP の規約
+
+[HTTP | MDN](https://developer.mozilla.org/docs/Web/HTTP) に従う。
+
+以下は特に確認すべきもの
+
+- [HTTP リクエストメソッド](https://developer.mozilla.org/docs/Web/HTTP/Reference/Methods)
+- [HTTP レスポンスステータスコード](https://developer.mozilla.org/docs/Web/HTTP/Reference/Status)
+
+`GET`, `DELETE`, `PUT`, `POST`を以下のルールで使い分ける。
+
+| メソッド | 安全性 | 冪等性 | キャッシュ | リクエスト値 | 独自ルール                                                    |
+| :------: | :----: | :----: | :--------: | :----------: | :------------------------------------------------------------ |
+|   GET    |   O    |   O    |     O      |    query     | パス内のメソッド名に get または list のプレフィックスを付ける |
+|  DELETE  |   X    |   O    |     X      |    query     | 物理削除で使用                                                |
+|   PUT    |   X    |   O    |     X      |     body     |                                                               |
+|   POST   |   X    |   X    | 条件付き\* |     body     |                                                               |
+
+- 安全かつ冪等な処理は GET
+- 物理削除を行い、冪等な処理は DELETE
+- 安全ではないが冪等性な処理は PUT
+- それ以外は全て POST
 
 ## API スキーマ定義
 
@@ -31,14 +51,14 @@ OpenAPI などを使うとスキーマファイルの管理コストがかかる
 
 ```go
 // cmd/httpserver/main.go
-mux.HandleFunc("GET /healthz", handler.HandleGetHealthz) // ヘルスチェックのみGETを使用
+mux.HandleFunc("GET /healthz", handler.HandleGetHealthz)
 
-mux.HandleFunc("POST /core/v1/task/get", taskHandler.HandleGetV1)
-mux.HandleFunc("POST /core/v1/task/list", taskHandler.HandleListV1)
+mux.HandleFunc("GET /core/v1/task/get", taskHandler.HandleGetV1)
+mux.HandleFunc("GET /core/v1/task/list", taskHandler.HandleListV1)
 mux.HandleFunc("POST /core/v1/task/create", taskHandler.HandleCreateV1)
-mux.HandleFunc("POST /core/v1/task/update", taskHandler.HandleUpdateV1)
-mux.HandleFunc("POST /core/v1/task/delete", taskHandler.HandleDeleteV1)
-mux.HandleFunc("POST /core/v1/task/done", taskHandler.HandleDoneV1)
+mux.HandleFunc("PUT /core/v1/task/update", taskHandler.HandleUpdateV1)
+mux.HandleFunc("DELETE /core/v1/task/delete", taskHandler.HandleDeleteV1)
+mux.HandleFunc("PUT /core/v1/task/done", taskHandler.HandleDoneV1)
 ```
 
 handler のコードを追えばリクエスト、レスポンスの内容が分かる。
@@ -96,16 +116,6 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-## リクエスト
-
-- POST メソッドを利用する
-- クエリパラメータは使用しない
-
-## レスポンス
-
-- `Content-Type`レスポンスヘッダーに`application/json; charset=utf-8`を設定する
-- [HTTP response status codes - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status)を参考に適切なステータスコードを設定する。
-
 ## その他の API 形式との比較
 
 それぞれのメリット、デメリットはこのリポジトリの設計との比較。
@@ -114,12 +124,22 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 
 メリット
 
-- メソッドから安全性、冪等性、キャッシュ可否が明確 ( [HTTP request methods - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) )
 - 採用実績が多く、チームメンバー間での認識齟齬が生まれにくい
 
 デメリット
 
-- 同じリソースに対して多様な操作を実装する場合、9 つのメソッドだけでは表現しきれない。
+- リソース指向の URI を使用する。同じリソースに対して多様な操作を実装する場合、拡張性に課題がある。
+
+[**JSON-RPC**](https://www.jsonrpc.org/)
+
+メリット
+
+- コミュニティで仕様を規定しているため、独自ルールよりはチームメンバー間での認識齟齬が生まれにくい
+
+デメリット
+
+- パスにメソッドを含まれないのでログの検索性が下がる
+- HTTP メソッドが POST 固定のため、安全性、冪等性、キャッシュ可否が読み取りにくい
 
 **gRPC**
 
@@ -141,18 +161,6 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 
 - Apollo などのライブラリを利用する前提になるため、依存が増える。
 - JavaScript の fetch API を直接使用しないことになる。
-
-**JSON-RPC**
-
-このリポジトリの設計に 1 番近い。[JSON-RPC](https://www.jsonrpc.org/)では単一のパスにしてリクエストボディでメソッドも指定している。
-
-メリット
-
-- コミュニティで仕様を規定しているため、独自ルールよりはチームメンバー間での認識齟齬が生まれにくい
-
-デメリット
-
-- パスにメソッドを含まれないのでログの検索性が下がる
 
 **結論**
 
