@@ -17,6 +17,7 @@ RPC スタイルの HTTP API
 - 単語は `lowerCamelCase` で統一
 - `<serviceName>` はマイクロサービス化を想定して設定、モノリス時は`core`というサービス名を使う。
 - `<useCaseName>`, `<methodName>` は`usecase`ディレクトリ配下の構造体名、メソッド名に合わせる。
+- `<methodName>`は常にパスに指定し、HTTP メソッドは安全性や冪等性などを判断するために使い分ける。
 
 ## HTTP の規約
 
