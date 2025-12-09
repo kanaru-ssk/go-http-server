@@ -15,8 +15,8 @@ func RenderJson(ctx context.Context, w http.ResponseWriter, statusCode int, body
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.Header().Add("Content-Length", strconv.Itoa(len(b)))
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Length", strconv.Itoa(len(b)))
 	w.WriteHeader(statusCode)
 	if _, err := w.Write(b); err != nil {
 		slog.ErrorContext(ctx, "response.RenderJson: http.ResponseWriter.Write:", "err", err)
