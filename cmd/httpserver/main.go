@@ -26,9 +26,9 @@ func main() {
 
 	idGenerator := &id.SecureGenerator{}
 	mu := &sync.RWMutex{}
-	txManager := memory.NewTxManager()
+	txManager := memory.NewTxManager(mu)
 	tasks := make(map[string]*task.Task)
-	app := dependencyInjection(mu, idGenerator, txManager, tasks)
+	app := dependencyInjection(idGenerator, txManager, tasks)
 
 	addr := ":8000"
 	srv := &http.Server{
@@ -56,9 +56,9 @@ type Application struct {
 	Handler http.Handler
 }
 
-func dependencyInjection(mu *sync.RWMutex, idGenerator id.Generator, txManager tx.Manager, tasks map[string]*task.Task) Application {
+func dependencyInjection(idGenerator id.Generator, txManager tx.Manager, tasks map[string]*task.Task) Application {
 	// interface/outbound
-	taskRepository := memorytask.NewRepository(mu, tasks)
+	taskRepository := memorytask.NewRepository(tasks)
 
 	// entity
 	taskFactory := task.NewFactory(idGenerator)

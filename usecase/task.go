@@ -48,7 +48,9 @@ func (u *TaskUseCase) Create(ctx context.Context, title string) (*task.Task, err
 		return nil, fmt.Errorf("usecase.TaskUseCase.Create: %w", err)
 	}
 	task := u.taskFactory.New(pt)
-	if err := u.taskRepository.Create(ctx, task); err != nil {
+	if err := u.txManager.WithinTx(ctx, func(ctx context.Context) error {
+		return u.taskRepository.Create(ctx, task)
+	}); err != nil {
 		return nil, fmt.Errorf("usecase.TaskUseCase.Create: %w", err)
 	}
 	return task, nil
@@ -90,7 +92,9 @@ func (u *TaskUseCase) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return fmt.Errorf("usecase.TaskUseCase.Delete: %w", err)
 	}
-	if err := u.taskRepository.Delete(ctx, pi); err != nil {
+	if err := u.txManager.WithinTx(ctx, func(ctx context.Context) error {
+		return u.taskRepository.Delete(ctx, pi)
+	}); err != nil {
 		return fmt.Errorf("usecase.TaskUseCase.Delete: %w", err)
 	}
 	return nil
