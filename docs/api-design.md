@@ -33,8 +33,8 @@ RPC スタイルの HTTP API
 | :------: | :----: | :----: | :--------: | :----------: | :------------------------------------------------------------ |
 |   GET    |   O    |   O    |     O      |    query     | パス内のメソッド名に get または list のプレフィックスを付ける |
 |  DELETE  |   X    |   O    |     X      |    query     | 物理削除で使用                                                |
-|   PUT    |   X    |   O    |     X      |     body     |                                                               |
-|   POST   |   X    |   X    | 条件付き\* |     body     |                                                               |
+|   PUT    |   X    |   O    |     X      |     body     | 部分更新でも冪等であれば PUT を使う                           |
+|   POST   |   X    |   X    |    X\*     |     body     |                                                               |
 
 - 安全かつ冪等な処理は GET
 - 物理削除を行い、冪等な処理は DELETE
@@ -66,25 +66,22 @@ handler のコードを追えばリクエスト、レスポンスの内容が分
 ```go
 // interface/inbound/http/handler/task.go
 
-// POST /core/v1/task/get
+// GET /core/v1/task/get
 func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		ID string `json:"id"`
-	} // リクエストスキーマ
-	var successResponse response.Task // 成功時のレスポンススキーマ
-	var errorResponse response.Error  // エラーレスポンススキーマ
+	// 1番初めにリクエストとレスポンスの変数を定義してI/Oを読み取りやすくする。
+	var query struct {
+		ID string `query:"id"` // queryは独自タグ
+	}
+	var successResponse response.Task
+	var errorResponse response.Error
 
 	ctx := r.Context()
 
-	// 400
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		slog.WarnContext(ctx, "handler.TaskHandler.HandleGetV1", "err", err)
-		errorResponse = response.MapError(response.ErrInvalidRequestBody)
-		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
-		return
-	}
+	// string型以外でusecaseに渡す引数はここでパースする。
+	// 空文字列などのバリデーションはusecaseに任せて型の解決のみ行う。
+	query.ID = r.URL.Query().Get("id")
 
-	t, err := h.taskUseCase.Get(ctx, request.ID)
+	t, err := h.taskUseCase.Get(ctx, query.ID)
 
 	// 200
 	if err == nil {

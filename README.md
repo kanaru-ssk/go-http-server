@@ -15,7 +15,7 @@ docker run --rm -it -p 8000:8000 go-http-server
 curl -X GET 'localhost:8000/core/v1/task/get?id=id_01'
 curl -X GET localhost:8000/core/v1/task/list
 curl -X POST localhost:8000/core/v1/task/create -d '{ "title": "title_01" }'
-curl -X PUT localhost:8000/core/v1/task/update -d '{ "id": "id_01", "title": "title_01", "status": "DONE" }'
+curl -X PUT localhost:8000/core/v1/task/update -d '{ "id": "id_01", "title": "title_updated", "status": "DONE" }'
 curl -X DELETE 'localhost:8000/core/v1/task/delete?id=id_01'
 ```
 

@@ -26,13 +26,17 @@ func NewTaskHandler(
 
 // GET /core/v1/task/get
 func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	var query struct {
+		ID string `query:"id"`
+	}
 	var successResponse response.Task
 	var errorResponse response.Error
 
 	ctx := r.Context()
 
-	t, err := h.taskUseCase.Get(ctx, id)
+	query.ID = r.URL.Query().Get("id")
+
+	t, err := h.taskUseCase.Get(ctx, query.ID)
 
 	// 200
 	if err == nil {
@@ -87,7 +91,7 @@ func (h *TaskHandler) HandleListV1(w http.ResponseWriter, r *http.Request) {
 
 // POST /core/v1/task/create
 func (h *TaskHandler) HandleCreateV1(w http.ResponseWriter, r *http.Request) {
-	var request struct {
+	var body struct {
 		Title string `json:"title"`
 	}
 	var successResponse response.Task
@@ -96,14 +100,14 @@ func (h *TaskHandler) HandleCreateV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// 400
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		slog.WarnContext(ctx, "handler.TaskHandler.HandleCreateV1", "err", err)
 		errorResponse = response.MapError(response.ErrInvalidRequestBody)
 		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
 		return
 	}
 
-	t, err := h.taskUseCase.Create(ctx, request.Title)
+	t, err := h.taskUseCase.Create(ctx, body.Title)
 
 	// 200
 	if err == nil {
@@ -128,7 +132,7 @@ func (h *TaskHandler) HandleCreateV1(w http.ResponseWriter, r *http.Request) {
 
 // PUT /core/v1/task/update
 func (h *TaskHandler) HandleUpdateV1(w http.ResponseWriter, r *http.Request) {
-	var request struct {
+	var body struct {
 		ID     string `json:"id"`
 		Title  string `json:"title"`
 		Status string `json:"status"`
@@ -139,14 +143,14 @@ func (h *TaskHandler) HandleUpdateV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// 400
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		slog.WarnContext(ctx, "handler.TaskHandler.HandleUpdateV1", "err", err)
 		errorResponse = response.MapError(response.ErrInvalidRequestBody)
 		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
 		return
 	}
 
-	t, err := h.taskUseCase.Update(ctx, request.ID, request.Title, request.Status)
+	t, err := h.taskUseCase.Update(ctx, body.ID, body.Title, body.Status)
 
 	// 200
 	if err == nil {
@@ -181,12 +185,16 @@ func (h *TaskHandler) HandleUpdateV1(w http.ResponseWriter, r *http.Request) {
 
 // DELETE /core/v1/task/delete
 func (h *TaskHandler) HandleDeleteV1(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	var query struct {
+		ID string `query:"id"`
+	}
 	var errorResponse response.Error
 
 	ctx := r.Context()
 
-	err := h.taskUseCase.Delete(ctx, id)
+	query.ID = r.URL.Query().Get("id")
+
+	err := h.taskUseCase.Delete(ctx, query.ID)
 
 	// 204
 	if err == nil {
@@ -218,7 +226,7 @@ func (h *TaskHandler) HandleDeleteV1(w http.ResponseWriter, r *http.Request) {
 
 // PUT /core/v1/task/done
 func (h *TaskHandler) HandleDoneV1(w http.ResponseWriter, r *http.Request) {
-	var request struct {
+	var body struct {
 		ID string `json:"id"`
 	}
 	var successResponse response.Task
@@ -227,7 +235,7 @@ func (h *TaskHandler) HandleDoneV1(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// 400
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		slog.WarnContext(ctx, "handler.TaskHandler.HandleDoneV1", "err", err)
 		errorResponse = response.MapError(response.ErrInvalidRequestBody)
 		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
