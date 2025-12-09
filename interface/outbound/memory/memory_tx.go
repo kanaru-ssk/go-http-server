@@ -12,6 +12,8 @@ type MemoryTxManager struct {
 	mu *sync.RWMutex
 }
 
+type MemoryTx struct{}
+
 func NewTxManager(mu *sync.RWMutex) tx.Manager {
 	if mu == nil {
 		mu = &sync.RWMutex{}
@@ -21,8 +23,8 @@ func NewTxManager(mu *sync.RWMutex) tx.Manager {
 
 // WithinTx は排他制御を行いながら処理を実行する。
 // ※実際のロールバックはできない（atomicityは保証しない）
-func (m *MemoryTxManager) WithinTx(ctx context.Context, fn func(ctx context.Context) error) error {
+func (m *MemoryTxManager) WithinTx(ctx context.Context, fn func(ctx context.Context, tx tx.Tx) error) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	return fn(ctx)
+	return fn(ctx, &MemoryTx{})
 }

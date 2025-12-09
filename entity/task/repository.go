@@ -1,12 +1,16 @@
 package task
 
-import "context"
+import (
+	"context"
+
+	"github.com/kanaru-ssk/go-http-server/lib/tx"
+)
 
 type Repository interface {
-	Get(ctx context.Context, id string) (*Task, error)
-	List(ctx context.Context) ([]*Task, error)
+	Get(ctx context.Context, tx tx.Tx, id string) (*Task, error)
+	List(ctx context.Context, tx tx.Tx) ([]*Task, error)
 
-	Create(ctx context.Context, task *Task) error
-	Update(ctx context.Context, task *Task) error
-	Delete(ctx context.Context, id string) error
+	Create(ctx context.Context, tx tx.Tx, task *Task) error
+	Update(ctx context.Context, tx tx.Tx, task *Task) error
+	Delete(ctx context.Context, tx tx.Tx, id string) error
 }

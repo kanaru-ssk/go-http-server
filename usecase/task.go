@@ -27,7 +27,7 @@ func (u *TaskUseCase) Get(ctx context.Context, id string) (*task.Task, error) {
 	if err != nil {
 		return nil, fmt.Errorf("usecase.TaskUseCase.Get: %w", err)
 	}
-	task, err := u.taskRepository.Get(ctx, pi)
+	task, err := u.taskRepository.Get(ctx, nil, pi)
 	if err != nil {
 		return nil, fmt.Errorf("usecase.TaskUseCase.Get: %w", err)
 	}
@@ -35,7 +35,7 @@ func (u *TaskUseCase) Get(ctx context.Context, id string) (*task.Task, error) {
 }
 
 func (u *TaskUseCase) List(ctx context.Context) ([]*task.Task, error) {
-	tasks, err := u.taskRepository.List(ctx)
+	tasks, err := u.taskRepository.List(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("usecase.TaskUseCase.List: %w", err)
 	}
@@ -48,8 +48,8 @@ func (u *TaskUseCase) Create(ctx context.Context, title string) (*task.Task, err
 		return nil, fmt.Errorf("usecase.TaskUseCase.Create: %w", err)
 	}
 	task := u.taskFactory.New(pt)
-	if err := u.txManager.WithinTx(ctx, func(ctx context.Context) error {
-		return u.taskRepository.Create(ctx, task)
+	if err := u.txManager.WithinTx(ctx, func(ctx context.Context, tx tx.Tx) error {
+		return u.taskRepository.Create(ctx, tx, task)
 	}); err != nil {
 		return nil, fmt.Errorf("usecase.TaskUseCase.Create: %w", err)
 	}
@@ -70,13 +70,13 @@ func (u *TaskUseCase) Update(ctx context.Context, id, title string, status strin
 		return nil, fmt.Errorf("usecase.TaskUseCase.Update: %w", err)
 	}
 	var task *task.Task
-	if err := u.txManager.WithinTx(ctx, func(ctx context.Context) error {
-		task, err = u.taskRepository.Get(ctx, pi)
+	if err := u.txManager.WithinTx(ctx, func(ctx context.Context, tx tx.Tx) error {
+		task, err = u.taskRepository.Get(ctx, tx, pi)
 		if err != nil {
 			return err
 		}
 		task.Update(pt, ps)
-		if err := u.taskRepository.Update(ctx, task); err != nil {
+		if err := u.taskRepository.Update(ctx, tx, task); err != nil {
 			return err
 		}
 		return nil
@@ -92,8 +92,8 @@ func (u *TaskUseCase) Delete(ctx context.Context, id string) error {
 	if err != nil {
 		return fmt.Errorf("usecase.TaskUseCase.Delete: %w", err)
 	}
-	if err := u.txManager.WithinTx(ctx, func(ctx context.Context) error {
-		return u.taskRepository.Delete(ctx, pi)
+	if err := u.txManager.WithinTx(ctx, func(ctx context.Context, tx tx.Tx) error {
+		return u.taskRepository.Delete(ctx, tx, pi)
 	}); err != nil {
 		return fmt.Errorf("usecase.TaskUseCase.Delete: %w", err)
 	}
