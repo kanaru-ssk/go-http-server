@@ -47,69 +47,14 @@ func assignValue(field reflect.Value, values []string) error {
 	if !field.CanSet() {
 		return fmt.Errorf("cannot set field")
 	}
-	last := values[len(values)-1]
-	switch field.Kind() {
-
-	case reflect.String:
-		field.SetString(last)
-
-	case reflect.Slice:
-		if field.Type().Elem().Kind() != reflect.String {
-			return fmt.Errorf("unsupported slice type %s", field.Type())
-		}
-		field.Set(reflect.ValueOf(values))
-
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		bitSize := field.Type().Bits()
-		n, err := strconv.ParseInt(last, 10, bitSize)
-		if err != nil {
-			return err
-		}
-		field.SetInt(n)
-
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		bitSize := field.Type().Bits()
-		n, err := strconv.ParseUint(last, 10, bitSize)
-		if err != nil {
-			return err
-		}
-		field.SetUint(n)
-
-	case reflect.Bool:
-		b, err := strconv.ParseBool(last)
-		if err != nil {
-			return err
-		}
-		field.SetBool(b)
-
-	case reflect.Float32, reflect.Float64:
-		bitSize := field.Type().Bits()
-		f, err := strconv.ParseFloat(last, bitSize)
-		if err != nil {
-			return err
-		}
-		field.SetFloat(f)
-
-	case reflect.Complex64, reflect.Complex128:
-		bitSize := field.Type().Bits()
-		c, err := strconv.ParseComplex(last, bitSize)
-		if err != nil {
-			return err
-		}
-		field.SetComplex(c)
-	case reflect.Struct:
-		if field.Type() == reflect.TypeOf(time.Time{}) {
-			t, err := parseTime(last)
-			if err != nil {
-				return err
-			}
-			field.Set(reflect.ValueOf(t))
-			return nil
-		}
-		fallthrough
-	default:
-		return fmt.Errorf("unsupported kind %s", field.Kind())
+	if field.Kind() == reflect.Slice {
+		return assignSlice(field, values)
 	}
+	parsed, err := parseScalar(field.Type(), values[len(values)-1])
+	if err != nil {
+		return err
+	}
+	field.Set(parsed)
 	return nil
 }
 
@@ -125,4 +70,78 @@ func parseTime(value string) (time.Time, error) {
 		return t, nil
 	}
 	return time.Time{}, fmt.Errorf("querydecoder: invalid time value %q", value)
+}
+
+func assignSlice(field reflect.Value, values []string) error {
+	elemType := field.Type().Elem()
+	slice := reflect.MakeSlice(field.Type(), 0, len(values))
+	for _, v := range values {
+		parsed, err := parseScalar(elemType, v)
+		if err != nil {
+			return err
+		}
+		slice = reflect.Append(slice, parsed)
+	}
+	field.Set(slice)
+	return nil
+}
+
+func parseScalar(t reflect.Type, value string) (reflect.Value, error) {
+	switch t.Kind() {
+	case reflect.String:
+		return reflect.ValueOf(value).Convert(t), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		bitSize := t.Bits()
+		n, err := strconv.ParseInt(value, 10, bitSize)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		val := reflect.New(t).Elem()
+		val.SetInt(n)
+		return val, nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		bitSize := t.Bits()
+		n, err := strconv.ParseUint(value, 10, bitSize)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		val := reflect.New(t).Elem()
+		val.SetUint(n)
+		return val, nil
+	case reflect.Bool:
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		val := reflect.New(t).Elem()
+		val.SetBool(b)
+		return val, nil
+	case reflect.Float32, reflect.Float64:
+		bitSize := t.Bits()
+		f, err := strconv.ParseFloat(value, bitSize)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		val := reflect.New(t).Elem()
+		val.SetFloat(f)
+		return val, nil
+	case reflect.Complex64, reflect.Complex128:
+		bitSize := t.Bits()
+		c, err := strconv.ParseComplex(value, bitSize)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		val := reflect.New(t).Elem()
+		val.SetComplex(c)
+		return val, nil
+	case reflect.Struct:
+		if t == reflect.TypeOf(time.Time{}) {
+			tm, err := parseTime(value)
+			if err != nil {
+				return reflect.Value{}, err
+			}
+			return reflect.ValueOf(tm), nil
+		}
+	}
+	return reflect.Value{}, fmt.Errorf("unsupported kind %s", t.Kind())
 }
