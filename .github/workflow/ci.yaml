@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Format
+        run: go fmt ./...
+      - name: Vet
+        run: go vet -v ./...
+      - name: Test
+        run: go test -v ./...
+      - name: Build
+        run: go build -v ./...
