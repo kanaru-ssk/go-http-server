@@ -31,7 +31,7 @@ var selectTaskSql string
 func (r *repository) Get(ctx context.Context, ltx tx.Tx, id string) (*task.Task, error) {
 	tx, err := postgres.UnwrapTx(ltx, r.pool)
 	if err != nil {
-		return nil, fmt.Errorf("task.repository.Get: %w: %w", task.ErrNotFound, err)
+		return nil, fmt.Errorf("task.repository.Get: postgres.UnwrapTx: %w", err)
 	}
 
 	var t task.Task
@@ -59,7 +59,7 @@ var selectAllTaskSql string
 func (r *repository) List(ctx context.Context, ltx tx.Tx) ([]*task.Task, error) {
 	tx, err := postgres.UnwrapTx(ltx, r.pool)
 	if err != nil {
-		return nil, fmt.Errorf("task.repository.List: postgres.UnwrapTx: %w: %w", task.ErrNotFound, err)
+		return nil, fmt.Errorf("task.repository.List: postgres.UnwrapTx: %w", err)
 	}
 
 	rows, err := tx.Query(ctx, selectAllTaskSql)
@@ -94,7 +94,7 @@ var insertTaskSQL string
 func (r *repository) Create(ctx context.Context, ltx tx.Tx, t *task.Task) error {
 	tx, err := postgres.UnwrapTx(ltx, r.pool)
 	if err != nil {
-		return fmt.Errorf("task.repository.Create: postgres.UnwrapTx: %w: %w", task.ErrNotFound, err)
+		return fmt.Errorf("task.repository.Create: postgres.UnwrapTx: %w", err)
 	}
 
 	_, err = tx.Exec(ctx, insertTaskSQL,
@@ -117,7 +117,7 @@ var updateTaskSQL string
 func (r *repository) Update(ctx context.Context, ltx tx.Tx, t *task.Task) error {
 	tx, err := postgres.UnwrapTx(ltx, r.pool)
 	if err != nil {
-		return fmt.Errorf("task.repository.Update: %w: %w", task.ErrNotFound, err)
+		return fmt.Errorf("task.repository.Update: postgres.UnwrapTx: %w", err)
 	}
 
 	_, err = tx.Exec(ctx, updateTaskSQL,
@@ -140,7 +140,7 @@ var deleteTaskSQL string
 func (r *repository) Delete(ctx context.Context, ltx tx.Tx, id string) error {
 	tx, err := postgres.UnwrapTx(ltx, r.pool)
 	if err != nil {
-		return fmt.Errorf("task.repository.Delete: %w: %w", task.ErrNotFound, err)
+		return fmt.Errorf("task.repository.Delete: postgres.UnwrapTx: %w", err)
 	}
 
 	_, err = tx.Exec(ctx, deleteTaskSQL, id)
