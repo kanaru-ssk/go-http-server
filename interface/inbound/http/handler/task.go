@@ -9,6 +9,7 @@ import (
 
 	"github.com/kanaru-ssk/go-http-server/entity/task"
 	"github.com/kanaru-ssk/go-http-server/interface/inbound/http/response"
+	"github.com/kanaru-ssk/go-http-server/lib/querydecoder"
 	"github.com/kanaru-ssk/go-http-server/usecase"
 )
 
@@ -34,7 +35,12 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	query.ID = r.URL.Query().Get("id")
+	if err := querydecoder.Decode(r.URL.Query(), &query); err != nil {
+		slog.WarnContext(ctx, "handler.TaskHandler.HandleGetV1", "err", err)
+		errorResponse = response.MapError(response.ErrInvalidRequestBody)
+		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
+		return
+	}
 
 	t, err := h.taskUseCase.Get(ctx, query.ID)
 
@@ -192,7 +198,12 @@ func (h *TaskHandler) HandleDeleteV1(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	query.ID = r.URL.Query().Get("id")
+	if err := querydecoder.Decode(r.URL.Query(), &query); err != nil {
+		slog.WarnContext(ctx, "handler.TaskHandler.HandleDeleteV1", "err", err)
+		errorResponse = response.MapError(response.ErrInvalidRequestBody)
+		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
+		return
+	}
 
 	err := h.taskUseCase.Delete(ctx, query.ID)
 
