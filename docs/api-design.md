@@ -71,16 +71,21 @@ handler のコードを追えばリクエスト、レスポンスの内容が分
 func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 	// 1番初めにリクエストとレスポンスの変数を定義してI/Oを読み取りやすくする。
 	var query struct {
-		ID string `query:"id"` // queryは独自タグ
+		ID string `query:"id"`
 	}
 	var successResponse response.Task
 	var errorResponse response.Error
 
 	ctx := r.Context()
 
-	// string型以外でusecaseに渡す引数はここでパースする。
-	// 空文字列などのバリデーションはusecaseに任せて型の解決のみ行う。
-	query.ID = r.URL.Query().Get("id")
+	// 型のパースだけinterfaceレイヤーで行う。
+	// 詳細なバリデーションはusecase以降で行う。
+	if err := querydecoder.Decode(r.URL.Query(), &query); err != nil {
+		slog.WarnContext(ctx, "handler.TaskHandler.HandleGetV1", "err", err)
+		errorResponse = response.MapError(response.ErrInvalidRequestBody)
+		response.RenderJson(ctx, w, http.StatusBadRequest, errorResponse)
+		return
+	}
 
 	t, err := h.taskUseCase.Get(ctx, query.ID)
 
@@ -148,6 +153,7 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 デメリット
 
 - proto ファイルを元に生成したクライアントコードの使用が前提になるため、JavaScript の fetch API や、curl コマンドなどが使用できず、開発体験が悪い。
+- HTTP メソッドが POST 固定のため、安全性、冪等性、キャッシュ可否が読み取りにくい
 
 **GraphQL**
 
@@ -157,11 +163,11 @@ func (h *TaskHandler) HandleGetV1(w http.ResponseWriter, r *http.Request) {
 
 デメリット
 
-- Apollo などのライブラリを利用する前提になるため、依存が増える。
-- JavaScript の fetch API を直接使用しないことになる。
+- Apollo などのライブラリを利用する前提になるため依存が増える。
+- HTTP メソッドが POST 固定のため、安全性、冪等性、キャッシュ可否が読み取りにくい
 
 **結論**
 
 - gRPC, GraphQL のように依存が増えるものは開発体験が下がるので採用しない。
 - RESTful は優れた設計だが、複雑なアプリケーションではメソッドの拡張性に課題がある。
-- JSON-RPC は 1 番近いが、ログの検索性を優先してこれには準拠しない。
+- JSON-RPC は全て POST を使用するのため安全性、冪等性、キャッシュ可否が読み取りにくい
