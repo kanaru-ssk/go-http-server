@@ -34,11 +34,11 @@ func main() {
 		Database: "postgres",
 		MaxConns: 10,
 	})
-	txManager := postgres.NewManager(pool)
 	if err != nil {
 		slog.ErrorContext(ctx, "main.main: postgres.NewPool", "err", err)
 		os.Exit(1)
 	}
+	txManager := postgres.NewManager(pool)
 	app := dependencyInjection(idGenerator, txManager, pool)
 
 	addr := ":8000"
