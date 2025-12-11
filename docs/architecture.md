@@ -139,6 +139,11 @@ type Repository interface {
 
 ## usecase
 
+```
+└── usecase/
+    └── task.go
+```
+
 エンティティ を使用してアプリケーション固有の処理フローを記述する。
 
 usecase のメソッドを読めば全体の処理の流れを把握できるようにする。
@@ -162,6 +167,24 @@ func (u *TaskUseCase) Get(ctx context.Context, id string) (*task.Task, error) {
 ## interface
 
 entity, usecase が特定の DB や外部 API、フレームワークに依存しないように interface レイヤーで吸収する。
+
+```
+├── interface/
+│   ├── inbound/
+│   │   └── http/
+│   │       ├── hundler/
+│   │       │   ├── healthz.go
+│   │       │   └── task.go
+│   │       └── response/
+│   │           ├── error.go
+│   │           ├── render.go
+│   │           └── task.go
+│   └── outbound/
+│       └── memory/
+│           ├── task/
+│           │   └── repository.go
+│           └── memory_tx.go
+```
 
 ### inbound
 
