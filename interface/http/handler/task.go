@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/kanaru-ssk/go-http-server/entity/task"
-	"github.com/kanaru-ssk/go-http-server/interface/inbound/http/response"
+	"github.com/kanaru-ssk/go-http-server/interface/http/response"
 	"github.com/kanaru-ssk/go-http-server/lib/querydecoder"
 	"github.com/kanaru-ssk/go-http-server/usecase"
 )
