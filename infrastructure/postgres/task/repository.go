@@ -8,8 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kanaru-ssk/go-http-server/entity/task"
-	"github.com/kanaru-ssk/go-http-server/interface/outbound/postgres"
+	"github.com/kanaru-ssk/go-http-server/domain/task"
+	"github.com/kanaru-ssk/go-http-server/infrastructure/postgres"
 	"github.com/kanaru-ssk/go-http-server/lib/tx"
 )
 
