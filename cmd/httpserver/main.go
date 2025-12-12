@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kanaru-ssk/go-http-server/entity/task"
-	"github.com/kanaru-ssk/go-http-server/interface/inbound/http/handler"
-	"github.com/kanaru-ssk/go-http-server/interface/outbound/postgres"
-	postgrestask "github.com/kanaru-ssk/go-http-server/interface/outbound/postgres/task"
+	"github.com/kanaru-ssk/go-http-server/domain/task"
+	"github.com/kanaru-ssk/go-http-server/infrastructure/postgres"
+	postgrestask "github.com/kanaru-ssk/go-http-server/infrastructure/postgres/task"
+	"github.com/kanaru-ssk/go-http-server/interface/http/handler"
 	"github.com/kanaru-ssk/go-http-server/lib/id"
 	"github.com/kanaru-ssk/go-http-server/lib/tx"
 	"github.com/kanaru-ssk/go-http-server/usecase"
@@ -69,16 +69,16 @@ type Application struct {
 }
 
 func dependencyInjection(idGenerator id.Generator, txManager tx.Manager, pool *pgxpool.Pool) Application {
-	// interface/outbound
+	// infrastructure
 	taskRepository := postgrestask.NewRepository(pool)
 
-	// entity
+	// domain
 	taskFactory := task.NewFactory(idGenerator)
 
 	// usecase
 	taskUseCase := usecase.NewTaskUseCase(txManager, taskFactory, taskRepository)
 
-	// interface/inbound
+	// interface
 	taskHandler := handler.NewTaskHandler(taskUseCase)
 
 	mux := http.NewServeMux()
