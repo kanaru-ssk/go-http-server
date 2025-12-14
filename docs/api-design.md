@@ -11,13 +11,22 @@ RPC スタイルの HTTP API
 ```
 /<serviceName>/<version>/<useCaseName>/<methodName>
 
-例: /core/v1/task/get
+例: /core/v1/task/done
 ```
 
 - 単語は `lowerCamelCase` で統一
 - `<serviceName>` はマイクロサービス化を想定して設定、モノリス時は`core`というサービス名を使う。
 - `<useCaseName>`, `<methodName>` は`usecase`ディレクトリ配下の構造体名、メソッド名に合わせる。
-- `<methodName>`は常にパスに指定し、HTTP メソッドは安全性や冪等性などを判断するために使い分ける。
+- `<methodName>`は常にパスに指定し、HTTP メソッドは安全性や冪等性などを判断するために使い分ける。動詞で始める
+
+### 通常の CRUD のメソッド名
+
+```
+POST   /core/v1/task/create # 主キーも指定する場合はPUTを使用
+GET    /core/v1/task/get    # 主キーを指定して取得
+PUT    /core/v1/task/update # 主キーと、クライアントが変更可能なすべての値を指定して更新
+DELETE /core/v1/task/delete # 主キーを指定して物理削除
+```
 
 ## HTTP の規約
 
